@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ポケモン タイピングゲーム</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --bg-card: #16213e;
+      --accent: #e94560;
+      --accent2: #f5a623;
+      --success: #2ecc71;
+      --text: #eaeaea;
+      --text-dim: #a0a0b8;
+      --pending: #6c6c8a;
+      --danger: #ff4757;
+      --master: #ffd700;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #1a1a2e 100%);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      text-align: center;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, var(--accent2), #ffe066);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 18px 36px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #c0392b);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 24px;
+      font-size: 1rem;
+    }
+
+    .mode-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: min(480px, 100%);
+    }
+
+    .mode-btn {
+      width: 100%;
+      padding: 28px 24px;
+      text-align: left;
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    .mode-btn:hover {
+      border-color: var(--accent2);
+      transform: translateY(-2px);
+    }
+
+    .mode-btn-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .mode-btn-desc {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .header-bar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .header-bar h2 {
+      font-size: 1.4rem;
+    }
+
+    .dex-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 20px;
+    }
+
+    .dex-card {
+      background: var(--bg-card);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+      position: relative;
+    }
+
+    .dex-card:hover {
+      border-color: var(--accent2);
+      transform: scale(1.03);
+    }
+
+    .dex-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px rgba(233, 69, 96, 0.4);
+    }
+
+    .dex-card.mastered {
+      border-color: var(--master);
+    }
+
+    .dex-card img {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      object-fit: contain;
+    }
+
+    .dex-card .name {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dex-card .count {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .dex-card .master-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 0.9rem;
+    }
+
+    .dex-card.locked img {
+      filter: grayscale(1) brightness(0.4);
+      opacity: 0.5;
+    }
+
+    .play-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 800px;
+      gap: 24px;
+    }
+
+    .pokemon-display {
+      text-align: center;
+    }
+
+    .pokemon-img-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .pokemon-img-wrap img {
+      width: clamp(160px, 28vw, 240px);
+      height: clamp(160px, 28vw, 240px);
+      image-rendering: pixelated;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
+      transition: transform 0.3s;
+    }
+
+    .pokemon-img-wrap.catching img {
+      animation: catchBounce 0.6s ease;
+    }
+
+    @keyframes catchBounce {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.2) rotate(-5deg); }
+      60% { transform: scale(0.9) rotate(3deg); }
+      100% { transform: scale(1); }
+    }
+
+    .pokemon-name {
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .dex-no {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+    }
+
+    .romaji-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      font-family: "Courier New", monospace;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 16px 24px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: var(--radius);
+      min-width: 200px;
+    }
+
+    .romaji-char {
+      display: inline-block;
+      min-width: 0.6em;
+      text-align: center;
+      transition: color 0.15s, transform 0.15s;
+      color: var(--pending);
+    }
+
+    .romaji-char.done {
+      color: var(--success);
+    }
+
+    .romaji-char.current {
+      color: #fff;
+      border-bottom: 3px solid var(--accent2);
+    }
+
+    .romaji-char.mistake {
+      color: var(--danger);
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .progress-label {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--text-dim);
+    }
+
+    .progress-bar {
+      height: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), #27ae60);
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-fill.master {
+      background: linear-gradient(90deg, var(--master), #f39c12);
+    }
+
+    .stage-info {
+      display: flex;
+      gap: 24px;
+      font-size: 1.2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stage-info span {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 20px;
+      border-radius: 50px;
+    }
+
+    .catch-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .catch-overlay.show {
+      display: flex;
+    }
+
+    .catch-message {
+      text-align: center;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .catch-message h2 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      color: var(--accent2);
+      text-shadow: 0 0 30px rgba(245, 166, 35, 0.6);
+      margin-bottom: 12px;
+    }
+
+    .catch-message p {
+      font-size: 1.3rem;
+      color: var(--text-dim);
+    }
+
+    .result-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+
+    .result-card h2 {
+      font-size: 2.2rem;
+      color: var(--accent2);
+      margin-bottom: 24px;
+    }
+
+    .result-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+      font-size: 1.2rem;
+    }
+
+    .stars {
+      font-size: 3rem;
+      letter-spacing: 8px;
+      margin-bottom: 20px;
+    }
+
+    .star-filled { color: var(--accent2); }
+    .star-empty { color: rgba(255, 255, 255, 0.15); }
+
+    .completion-banner {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(245, 166, 35, 0.1));
+      border: 2px solid var(--master);
+      border-radius: var(--radius);
+      padding: 16px 24px;
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .completion-banner h3 {
+      color: var(--master);
+      font-size: 1.3rem;
+    }
+
+    .dex-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      padding: 10px 18px;
+      border-radius: 50px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .hidden-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .hint-text {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .screen { padding: 12px; }
+      .pokemon-img-wrap img {
+        width: 120px;
+        height: 120px;
+      }
+      .romaji-display { font-size: 1.6rem; padding: 10px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- トップ画面 -->
+  <div id="screen-title" class="screen active">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
+      <h1>ポケモン タイピング</h1>
+      <p class="subtitle">ローマ字を打ってポケモンをゲットしよう！</p>
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="dex">
+          <div class="mode-btn-title">📖 図鑑コンプリートモード</div>
+          <div class="mode-btn-desc">ポケモンを50回入力してマスター！<br>全部マスターで図鑑コンプリート！</div>
+        </button>
+        <button class="mode-btn" data-mode="stage">
+          <div class="mode-btn-title">⚡ ステージクリアモード</div>
+          <div class="mode-btn-desc">ランダム10体を連続で入力！<br>タイムとミス数でスター評価！</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 図鑑モード -->
+  <div id="screen-dex" class="screen">
+    <div class="header-bar">
+      <button class="btn btn-ghost" id="dex-back">← もどる</button>
+      <h2>📖 図鑑コンプリートモード</h2>
+      <div style="width:80px;"></div>
+    </div>
+    <div id="dex-completion" class="completion-banner" style="display:none;">
+      <h3>🎉 おめでとう！図鑑コンプリート！</h3>
+    </div>
+    <div class="dex-controls">
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="dex-order-sequential">じゅんばん</button>
+        <button class="toggle-btn" id="dex-order-free">じゆうせんたく</button>
+      </div>
+      <button class="btn btn-primary" id="dex-start" style="padding:12px 28px;font-size:1rem;">はじめる！</button>
+    </div>
+    <div id="dex-grid" class="dex-grid"></div>
+  </div>
+
+  <!-- プレイ画面（共通） -->
+  <div id="screen-play" class="screen">
+    <div class="header-bar">
+      <button class="btn btn-ghost" id="play-back">← もどる</button>
+      <h2 id="play-mode-title"></h2>
+      <div id="play-header-right"></div>
+    </div>
+    <div class="play-area">
+      <div id="stage-info" class="stage-info" style="display:none;"></div>
+      <div class="pokemon-display">
+        <div class="pokemon-img-wrap" id="pokemon-img-wrap">
+          <img id="pokemon-img" src="" alt="ポケモン">
+        </div>
+        <div class="dex-no" id="pokemon-dex-no"></div>
+        <div class="pokemon-name" id="pokemon-name"></div>
+      </div>
+      <div class="romaji-display" id="romaji-display"></div>
+      <div id="dex-progress" class="progress-bar-wrap" style="display:none;">
+        <div class="progress-label" id="progress-label"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <p class="hint-text">キーボードでローマ字を入力してね</p>
+    </div>
+    <input type="text" class="hidden-input" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  </div>
+
+  <!-- ステージリザルト -->
+  <div id="screen-result" class="screen">
+    <div class="play-area">
+      <div class="result-card">
+        <h2>🎊 ステージクリア！</h2>
+        <div class="stars" id="result-stars"></div>
+        <div class="result-stats">
+          <div>⏱ タイム: <strong id="result-time"></strong></div>
+          <div>❌ ミス: <strong id="result-mistakes"></strong> 回</div>
+          <div>✅ 正解: <strong id="result-correct"></strong> / 10</div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="result-retry">もういちど</button>
+          <button class="btn btn-ghost" id="result-home">ホームへ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ゲット演出 -->
+  <div class="catch-overlay" id="catch-overlay">
+    <div class="catch-message">
+      <h2>ゲットだぜ！</h2>
+      <p id="catch-sub"></p>
+    </div>
+  </div>
+
+  <script>
+    const MASTERY_COUNT = 50;
+    const STAGE_SIZE = 10;
+    const STORAGE_KEY = "pokemon-typing-progress";
+
+    const pokemonList = [
+      { dexNo: 1, name: "フシギダネ", romaji: "HUSHIGIDANE" },
+      { dexNo: 4, name: "ヒトカゲ", romaji: "HITOKAGE" },
+      { dexNo: 7, name: "ゼニガメ", romaji: "ZENIGAME" },
+      { dexNo: 10, name: "キャタピー", romaji: "KYATAPII" },
+      { dexNo: 11, name: "コクーン", romaji: "KOKUUN" },
+      { dexNo: 13, name: "ビードル", romaji: "BIIDORU" },
+      { dexNo: 16, name: "ポッポ", romaji: "POPPO" },
+      { dexNo: 19, name: "コラッタ", romaji: "KORATTA" },
+      { dexNo: 21, name: "オニスズメ", romaji: "ONISUZUME" },
+      { dexNo: 23, name: "アーボ", romaji: "AABO" },
+      { dexNo: 25, name: "ピカチュウ", romaji: "PIKACHUU" },
+      { dexNo: 27, name: "サンド", romaji: "SANDO" },
+      { dexNo: 35, name: "ピッピ", romaji: "PIPPI" },
+      { dexNo: 37, name: "ロコン", romaji: "ROKON" },
+      { dexNo: 39, name: "プリン", romaji: "PURIN" },
+      { dexNo: 41, name: "ズバット", romaji: "ZUBATTO" },
+      { dexNo: 52, name: "ニャース", romaji: "NYAASU" },
+      { dexNo: 54, name: "コダック", romaji: "KODAKKU" },
+      { dexNo: 56, name: "マンキー", romaji: "MANKII" },
+      { dexNo: 58, name: "ガーディ", romaji: "GAADI" },
+      { dexNo: 63, name: "ケーシィ", romaji: "KEESHII" },
+      { dexNo: 66, name: "ワンリキー", romaji: "WANRIKII" },
+      { dexNo: 74, name: "イシツブテ", romaji: "ISHITSUBUTE" },
+      { dexNo: 129, name: "コイキング", romaji: "KOIKINGU" },
+      { dexNo: 131, name: "ラプラス", romaji: "RAPURASU" },
+      { dexNo: 133, name: "イーブイ", romaji: "IIBUI" },
+      { dexNo: 143, name: "カビゴン", romaji: "KABIGON" },
+      { dexNo: 147, name: "ミニリュウ", romaji: "MINIRYUU" },
+    ];
+
+    function getSpriteUrl(dexNo) {
+      return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${dexNo}.png`;
+    }
+
+    function loadProgress() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch (_) {}
+      const progress = {};
+      pokemonList.forEach(p => {
+        progress[p.dexNo] = { count: 0, mastered: false };
+      });
+      return progress;
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+    }
+
+    const state = {
+      progress: loadProgress(),
+      mode: null,
+      dexOrder: "sequential",
+      selectedDexNo: null,
+      currentPokemon: null,
+      inputIndex: 0,
+      stageQueue: [],
+      stageIndex: 0,
+      stageMistakes: 0,
+      stageStartTime: 0,
+      dexSequentialIndex: 0,
+      isProcessing: false,
+    };
+
+    const screens = {
+      title: document.getElementById("screen-title"),
+      dex: document.getElementById("screen-dex"),
+      play: document.getElementById("screen-play"),
+      result: document.getElementById("screen-result"),
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[name].classList.add("active");
+      if (name === "play") {
+        document.getElementById("hidden-input").focus();
+      }
+    }
+
+    function renderDexGrid() {
+      const grid = document.getElementById("dex-grid");
+      grid.innerHTML = "";
+      const masteredCount = pokemonList.filter(p => state.progress[p.dexNo]?.mastered).length;
+
+      document.getElementById("dex-completion").style.display =
+        masteredCount === pokemonList.length ? "block" : "none";
+
+      pokemonList.forEach(p => {
+        const prog = state.progress[p.dexNo] || { count: 0, mastered: false };
+        const card = document.createElement("div");
+        card.className = "dex-card" +
+          (prog.mastered ? " mastered" : "") +
+          (state.selectedDexNo === p.dexNo ? " selected" : "");
+        card.innerHTML = `
+          ${prog.mastered ? '<span class="master-badge">⭐</span>' : ""}
+          <img src="${getSpriteUrl(p.dexNo)}" alt="${p.name}" loading="lazy">
+          <div class="name">${p.name}</div>
+          <div class="count">${prog.count}/${MASTERY_COUNT}</div>
+        `;
+        card.addEventListener("click", () => {
+          if (state.dexOrder === "free") {
+            state.selectedDexNo = p.dexNo;
+            renderDexGrid();
+          }
+        });
+        grid.appendChild(card);
+      });
+    }
+
+    function getNextDexPokemon() {
+      if (state.dexOrder === "free" && state.selectedDexNo) {
+        return pokemonList.find(p => p.dexNo === state.selectedDexNo);
+      }
+      const start = state.dexSequentialIndex;
+      for (let i = 0; i < pokemonList.length; i++) {
+        const idx = (start + i) % pokemonList.length;
+        const p = pokemonList[idx];
+        if (!state.progress[p.dexNo]?.mastered) {
+          state.dexSequentialIndex = idx;
+          return p;
+        }
+      }
+      return pokemonList[state.dexSequentialIndex % pokemonList.length];
+    }
+
+    function startStage() {
+      const shuffled = [...pokemonList].sort(() => Math.random() - 0.5);
+      state.stageQueue = shuffled.slice(0, STAGE_SIZE);
+      state.stageIndex = 0;
+      state.stageMistakes = 0;
+      state.stageStartTime = Date.now();
+      state.mode = "stage";
+      document.getElementById("play-mode-title").textContent = "⚡ ステージクリアモード";
+      document.getElementById("dex-progress").style.display = "none";
+      document.getElementById("stage-info").style.display = "flex";
+      showScreen("play");
+      loadPokemon(state.stageQueue[0]);
+    }
+
+    function startDexPlay() {
+      if (state.dexOrder === "free" && !state.selectedDexNo) {
+        state.selectedDexNo = pokemonList[0].dexNo;
+      }
+      state.mode = "dex";
+      document.getElementById("play-mode-title").textContent = "📖 図鑑コンプリートモード";
+      document.getElementById("stage-info").style.display = "none";
+      document.getElementById("dex-progress").style.display = "block";
+      showScreen("play");
+      loadPokemon(getNextDexPokemon());
+    }
+
+    function loadPokemon(pokemon) {
+      state.currentPokemon = pokemon;
+      state.inputIndex = 0;
+      state.isProcessing = false;
+
+      document.getElementById("pokemon-img").src = getSpriteUrl(pokemon.dexNo);
+      document.getElementById("pokemon-img").alt = pokemon.name;
+      document.getElementById("pokemon-name").textContent = pokemon.name;
+      document.getElementById("pokemon-dex-no").textContent = `No.${String(pokemon.dexNo).padStart(3, "0")}`;
+      document.getElementById("pokemon-img-wrap").classList.remove("catching");
+
+      renderRomaji();
+      updatePlayUI();
+      document.getElementById("hidden-input").value = "";
+      document.getElementById("hidden-input").focus();
+    }
+
+    function renderRomaji() {
+      const display = document.getElementById("romaji-display");
+      const romaji = state.currentPokemon.romaji;
+      display.innerHTML = "";
+      for (let i = 0; i < romaji.length; i++) {
+        const span = document.createElement("span");
+        span.className = "romaji-char";
+        span.textContent = romaji[i];
+        if (i < state.inputIndex) span.classList.add("done");
+        else if (i === state.inputIndex) span.classList.add("current");
+        display.appendChild(span);
+      }
+    }
+
+    function updatePlayUI() {
+      if (state.mode === "stage") {
+        document.getElementById("stage-info").innerHTML = `
+          <span>${state.stageIndex + 1} / ${STAGE_SIZE}</span>
+          <span>⏱ ${formatTime(Date.now() - state.stageStartTime)}</span>
+          <span>❌ ${state.stageMistakes}</span>
+        `;
+      }
+
+      if (state.mode === "dex" && state.currentPokemon) {
+        const prog = state.progress[state.currentPokemon.dexNo] || { count: 0, mastered: false };
+        document.getElementById("progress-label").textContent =
+          `${state.currentPokemon.name} ${prog.count} / ${MASTERY_COUNT}` +
+          (prog.mastered ? " ⭐マスター！" : "");
+        const pct = Math.min(100, (prog.count / MASTERY_COUNT) * 100);
+        const fill = document.getElementById("progress-fill");
+        fill.style.width = pct + "%";
+        fill.classList.toggle("master", prog.mastered);
+      }
+    }
+
+    function formatTime(ms) {
+      const sec = Math.floor(ms / 1000);
+      const min = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${min}:${String(s).padStart(2, "0")}`;
+    }
+
+    function showCatchAnimation(subtitle) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById("catch-overlay");
+        document.getElementById("catch-sub").textContent = subtitle || "";
+        document.getElementById("pokemon-img-wrap").classList.add("catching");
+        overlay.classList.add("show");
+        setTimeout(() => {
+          overlay.classList.remove("show");
+          resolve();
+        }, 1200);
+      });
+    }
+
+    async function onComplete() {
+      if (state.isProcessing) return;
+      state.isProcessing = true;
+      const pokemon = state.currentPokemon;
+
+      if (state.mode === "dex") {
+        const prog = state.progress[pokemon.dexNo];
+        const wasMastered = prog.mastered;
+        prog.count = Math.min(prog.count + 1, MASTERY_COUNT);
+        if (prog.count >= MASTERY_COUNT) prog.mastered = true;
+        saveProgress();
+
+        let subtitle = `${pokemon.name} をゲット！`;
+        if (!wasMastered && prog.mastered) subtitle = `${pokemon.name} マスターになった！⭐`;
+        await showCatchAnimation(subtitle);
+
+        state.dexSequentialIndex = (pokemonList.findIndex(p => p.dexNo === pokemon.dexNo) + 1) % pokemonList.length;
+        loadPokemon(getNextDexPokemon());
+      } else {
+        await showCatchAnimation(`${pokemon.name} をゲット！`);
+        state.stageIndex++;
+        if (state.stageIndex >= STAGE_SIZE) {
+          showStageResult();
+        } else {
+          loadPokemon(state.stageQueue[state.stageIndex]);
+        }
+      }
+    }
+
+    function calcStars(elapsed, mistakes) {
+      let stars = 3;
+      if (mistakes > 15) stars = 1;
+      else if (mistakes > 5) stars = 2;
+      const sec = elapsed / 1000;
+      if (sec > 300) stars = Math.min(stars, 1);
+      else if (sec > 180) stars = Math.min(stars, 2);
+      return stars;
+    }
+
+    function showStageResult() {
+      const elapsed = Date.now() - state.stageStartTime;
+      const stars = calcStars(elapsed, state.stageMistakes);
+      document.getElementById("result-time").textContent = formatTime(elapsed);
+      document.getElementById("result-mistakes").textContent = state.stageMistakes;
+      document.getElementById("result-correct").textContent = STAGE_SIZE;
+
+      let starsHtml = "";
+      for (let i = 1; i <= 3; i++) {
+        starsHtml += `<span class="${i <= stars ? "star-filled" : "star-empty"}">★</span>`;
+      }
+      document.getElementById("result-stars").innerHTML = starsHtml;
+      showScreen("result");
+    }
+
+    function handleKey(char) {
+      if (!state.currentPokemon || state.isProcessing) return;
+      const expected = state.currentPokemon.romaji[state.inputIndex];
+      const input = char.toUpperCase();
+
+      if (input === expected) {
+        state.inputIndex++;
+        renderRomaji();
+        if (state.inputIndex >= state.currentPokemon.romaji.length) {
+          onComplete();
+        }
+      } else {
+        if (state.mode === "stage") state.stageMistakes++;
+        const chars = document.querySelectorAll(".romaji-char");
+        const current = chars[state.inputIndex];
+        if (current) {
+          current.classList.add("mistake");
+          setTimeout(() => current.classList.remove("mistake"), 300);
+        }
+        updatePlayUI();
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (!screens.play.classList.contains("active")) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        return;
+      }
+
+      if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        e.preventDefault();
+        handleKey(e.key);
+        updatePlayUI();
+      }
+    });
+
+    document.getElementById("hidden-input").addEventListener("input", e => {
+      const val = e.target.value;
+      if (val.length > 0) {
+        const last = val[val.length - 1];
+        if (/[a-zA-Z]/.test(last)) handleKey(last);
+        e.target.value = "";
+        updatePlayUI();
+      }
+    });
+
+    document.querySelectorAll(".mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.mode;
+        if (mode === "dex") {
+          renderDexGrid();
+          showScreen("dex");
+        } else {
+          startStage();
+        }
+      });
+    });
+
+    document.getElementById("dex-back").addEventListener("click", () => showScreen("title"));
+    document.getElementById("play-back").addEventListener("click", () => {
+      if (state.mode === "dex") {
+        renderDexGrid();
+        showScreen("dex");
+      } else {
+        showScreen("title");
+      }
+    });
+
+    document.getElementById("dex-start").addEventListener("click", startDexPlay);
+
+    document.getElementById("dex-order-sequential").addEventListener("click", () => {
+      state.dexOrder = "sequential";
+      state.selectedDexNo = null;
+      document.getElementById("dex-order-sequential").classList.add("active");
+      document.getElementById("dex-order-free").classList.remove("active");
+      renderDexGrid();
+    });
+
+    document.getElementById("dex-order-free").addEventListener("click", () => {
+      state.dexOrder = "free";
+      document.getElementById("dex-order-free").classList.add("active");
+      document.getElementById("dex-order-sequential").classList.remove("active");
+      if (!state.selectedDexNo) state.selectedDexNo = pokemonList[0].dexNo;
+      renderDexGrid();
+    });
+
+    document.getElementById("result-retry").addEventListener("click", startStage);
+    document.getElementById("result-home").addEventListener("click", () => showScreen("title"));
+
+    setInterval(() => {
+      if (state.mode === "stage" && screens.play.classList.contains("active") && !state.isProcessing) {
+        updatePlayUI();
+      }
+    }, 1000);
+
+    renderDexGrid();
+  </script>
+</body>
+</html>
