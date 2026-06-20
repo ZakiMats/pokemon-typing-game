@@ -48,6 +48,7 @@
   - 日本語の長音記号 **「ー」** には、同じ位置に **`-`（ハイフン）** を置く（例: イーブイ → I-BUI、ミュウツー → MYUUTSU-）
   - 「ー」がない長い母音は **母音を重ねる**（例: ピカチュウ → PIKACHUU、ミュウ → MYUU）
   - 促音（っ）は次の子音を重ねる（例: ポッポ → POPPO）
+  - 小さい仮名（ァィゥェォ等）は **`X` + 母音** で表す（例: ディ → DEXI、シィ → SHIXI）
   - 語末の「ん」は **`NN`** で表す（例: カビゴン → KABIGONN、ロコン → ROKONN）
   - 語中の「ん」（次の文字が子音・母音で続く場合）は **`N`** 1文字（例: マンキー → MANKI-、ゼニガメ → ZENIGAME）
   - 「ー」＋語末の「ん」が続く場合は **`-` + `NN`**（例: コクーン → KOK-NN）
@@ -79,8 +80,8 @@
 | 17 | 52 | ニャース | NYA-SU | sprites/pokemon/52.png |
 | 18 | 54 | コダック | KODAKKU | sprites/pokemon/54.png |
 | 19 | 56 | マンキー | MANKI- | sprites/pokemon/56.png |
-| 20 | 58 | ガーディ | GA-DI | sprites/pokemon/58.png |
-| 21 | 63 | ケーシィ | KE-SHII | sprites/pokemon/63.png |
+| 20 | 58 | ガーディ | GA-DEXI | sprites/pokemon/58.png |
+| 21 | 63 | ケーシィ | KE-SHIXI | sprites/pokemon/63.png |
 | 22 | 66 | ワンリキー | WANRIKI- | sprites/pokemon/66.png |
 | 23 | 74 | イシツブテ | ISHITSUBUTE | sprites/pokemon/74.png |
 | 24 | 129 | コイキング | KOIKINGU | sprites/pokemon/129.png |
