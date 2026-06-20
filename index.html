@@ -305,6 +305,11 @@
       color: var(--pending);
     }
 
+    .romaji-char.hyphen {
+      min-width: 0.4em;
+      color: var(--accent2);
+    }
+
     .romaji-char.done {
       color: var(--success);
     }
@@ -572,7 +577,7 @@
         <div class="progress-label" id="progress-label"></div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
-      <p class="hint-text">キーボードでローマ字を入力してね</p>
+      <p class="hint-text">キーボードでローマ字を入力してね（長音は - 、語末のんは NN）</p>
     </div>
     <input type="text" class="hidden-input" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </div>
@@ -613,31 +618,31 @@
       { dexNo: 1, name: "フシギダネ", romaji: "HUSHIGIDANE" },
       { dexNo: 4, name: "ヒトカゲ", romaji: "HITOKAGE" },
       { dexNo: 7, name: "ゼニガメ", romaji: "ZENIGAME" },
-      { dexNo: 10, name: "キャタピー", romaji: "KYATAPII" },
-      { dexNo: 11, name: "コクーン", romaji: "KOKUUN" },
-      { dexNo: 13, name: "ビードル", romaji: "BIIDORU" },
+      { dexNo: 10, name: "キャタピー", romaji: "KYATAPI-" },
+      { dexNo: 11, name: "コクーン", romaji: "KOK-NN" },
+      { dexNo: 13, name: "ビードル", romaji: "BI-DORU" },
       { dexNo: 16, name: "ポッポ", romaji: "POPPO" },
       { dexNo: 19, name: "コラッタ", romaji: "KORATTA" },
       { dexNo: 21, name: "オニスズメ", romaji: "ONISUZUME" },
-      { dexNo: 23, name: "アーボ", romaji: "AABO" },
-      { dexNo: 25, name: "ピカチュウ", romaji: "PIKACHUU" },
+      { dexNo: 23, name: "アーボ", romaji: "A-BO" },
+      { dexNo: 25, name: "ピカチュウ", romaji: "PIKACHU-" },
       { dexNo: 27, name: "サンド", romaji: "SANDO" },
       { dexNo: 35, name: "ピッピ", romaji: "PIPPI" },
-      { dexNo: 37, name: "ロコン", romaji: "ROKON" },
-      { dexNo: 39, name: "プリン", romaji: "PURIN" },
+      { dexNo: 37, name: "ロコン", romaji: "ROKONN" },
+      { dexNo: 39, name: "プリン", romaji: "PURINN" },
       { dexNo: 41, name: "ズバット", romaji: "ZUBATTO" },
-      { dexNo: 52, name: "ニャース", romaji: "NYAASU" },
+      { dexNo: 52, name: "ニャース", romaji: "NYA-SU" },
       { dexNo: 54, name: "コダック", romaji: "KODAKKU" },
-      { dexNo: 56, name: "マンキー", romaji: "MANKII" },
-      { dexNo: 58, name: "ガーディ", romaji: "GAADI" },
-      { dexNo: 63, name: "ケーシィ", romaji: "KEESHII" },
-      { dexNo: 66, name: "ワンリキー", romaji: "WANRIKII" },
+      { dexNo: 56, name: "マンキー", romaji: "MANKI-" },
+      { dexNo: 58, name: "ガーディ", romaji: "GA-DI" },
+      { dexNo: 63, name: "ケーシィ", romaji: "KE-SHI-" },
+      { dexNo: 66, name: "ワンリキー", romaji: "WANRIKI-" },
       { dexNo: 74, name: "イシツブテ", romaji: "ISHITSUBUTE" },
       { dexNo: 129, name: "コイキング", romaji: "KOIKINGU" },
       { dexNo: 131, name: "ラプラス", romaji: "RAPURASU" },
-      { dexNo: 133, name: "イーブイ", romaji: "IIBUI" },
-      { dexNo: 143, name: "カビゴン", romaji: "KABIGON" },
-      { dexNo: 147, name: "ミニリュウ", romaji: "MINIRYUU" },
+      { dexNo: 133, name: "イーブイ", romaji: "I-BUI" },
+      { dexNo: 143, name: "カビゴン", romaji: "KABIGONN" },
+      { dexNo: 147, name: "ミニリュウ", romaji: "MINIRYU-" },
     ];
 
     function getSpriteUrl(dexNo) {
@@ -785,7 +790,7 @@
       display.innerHTML = "";
       for (let i = 0; i < romaji.length; i++) {
         const span = document.createElement("span");
-        span.className = "romaji-char";
+        span.className = "romaji-char" + (romaji[i] === "-" ? " hyphen" : "");
         span.textContent = romaji[i];
         if (i < state.inputIndex) span.classList.add("done");
         else if (i === state.inputIndex) span.classList.add("current");
@@ -888,10 +893,15 @@
       showScreen("result");
     }
 
+    function typingCharFromKey(key) {
+      if (key === "-" || key === "Minus") return "-";
+      return key.toUpperCase();
+    }
+
     function handleKey(char) {
       if (!state.currentPokemon || state.isProcessing) return;
       const expected = state.currentPokemon.romaji[state.inputIndex];
-      const input = char.toUpperCase();
+      const input = typingCharFromKey(char);
 
       if (input === expected) {
         state.inputIndex++;
@@ -920,7 +930,7 @@
         return;
       }
 
-      if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+      if (e.key === "-" || e.key === "Minus" || (e.key.length === 1 && /[a-zA-Z]/.test(e.key))) {
         e.preventDefault();
         handleKey(e.key);
         updatePlayUI();
@@ -931,7 +941,7 @@
       const val = e.target.value;
       if (val.length > 0) {
         const last = val[val.length - 1];
-        if (/[a-zA-Z]/.test(last)) handleKey(last);
+        if (last === "-" || /[a-zA-Z]/.test(last)) handleKey(last);
         e.target.value = "";
         updatePlayUI();
       }
