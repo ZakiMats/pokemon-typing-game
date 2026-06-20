@@ -54,7 +54,7 @@
   - 小さい仮名（ァィゥェォ等）は **`X` + 母音** で表す（例: ディ → DEXI、シィ → SHIXI）
   - 語末の「ん」は **`NN`** で表す（例: カビゴン → KABIGONN、ロコン → ROKONN）
   - 語中の「ん」（次の文字が子音・母音で続く場合）は **`N`** 1文字（例: マンキー → MANKI-、ゼニガメ → ZENIGAME）
-  - 「ー」＋語末の「ん」が続く場合は **`-` + `NN`**（例: コクーン → KOK-NN）
+  - 「ー」＋語末の「ん」が続く場合は **`-` + `NN`**（例: コクーン → KOKU-NN）
 
 ---
 
@@ -68,7 +68,7 @@
 | 2 | 4 | ヒトカゲ | HITOKAGE | sprites/pokemon/4.png |
 | 3 | 7 | ゼニガメ | ZENIGAME | sprites/pokemon/7.png |
 | 4 | 10 | キャタピー | KYATAPI- | sprites/pokemon/10.png |
-| 5 | 11 | コクーン | KOK-NN | sprites/pokemon/11.png |
+| 5 | 11 | コクーン | KOKU-NN | sprites/pokemon/11.png |
 | 6 | 13 | ビードル | BI-DORU | sprites/pokemon/13.png |
 | 7 | 16 | ポッポ | POPPO | sprites/pokemon/16.png |
 | 8 | 19 | コラッタ | KORATTA | sprites/pokemon/19.png |
