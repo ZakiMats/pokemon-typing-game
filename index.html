@@ -226,9 +226,46 @@
       font-size: 0.9rem;
     }
 
+    .dex-card.locked {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .dex-card.locked:hover {
+      border-color: rgba(255, 255, 255, 0.08);
+      transform: none;
+    }
+
     .dex-card.locked img {
       filter: grayscale(1) brightness(0.4);
       opacity: 0.5;
+    }
+
+    .dex-card .lock-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto;
+    }
+
+    .unlock-banner {
+      background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.1));
+      border: 2px solid #3498db;
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 1100px;
+      font-size: 1rem;
+      color: var(--text-dim);
+    }
+
+    .unlock-banner strong {
+      color: #5dade2;
     }
 
     .play-area {
@@ -526,7 +563,7 @@
       <div class="mode-buttons">
         <button class="mode-btn" data-mode="dex">
           <div class="mode-btn-title">📖 図鑑コンプリートモード</div>
-          <div class="mode-btn-desc">ポケモンを50回入力してマスター！<br>全部マスターで図鑑コンプリート！</div>
+          <div class="mode-btn-desc">ポケモンを50回入力してマスター！<br>マスターするたびに新しいポケモンが1体登場！</div>
         </button>
         <button class="mode-btn" data-mode="stage">
           <div class="mode-btn-title">⚡ ステージクリアモード</div>
@@ -543,6 +580,7 @@
       <h2>📖 図鑑コンプリートモード</h2>
       <div style="width:80px;"></div>
     </div>
+    <div id="dex-unlock-info" class="unlock-banner"></div>
     <div id="dex-completion" class="completion-banner" style="display:none;">
       <h3>🎉 おめでとう！図鑑コンプリート！</h3>
     </div>
@@ -613,6 +651,8 @@
     const MASTERY_COUNT = 50;
     const STAGE_SIZE = 10;
     const STORAGE_KEY = "pokemon-typing-progress";
+    const UNLOCK_KEY = "pokemon-typing-unlocked";
+    const INITIAL_UNLOCK_COUNT = 1;
 
     const pokemonList = [
       { dexNo: 1, name: "フシギダネ", romaji: "HUSHIGIDANE" },
@@ -651,6 +691,53 @@
       return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${dexNo}.png`;
     }
 
+    function loadUnlocked() {
+      try {
+        const saved = localStorage.getItem(UNLOCK_KEY);
+        if (saved) return new Set(JSON.parse(saved));
+      } catch (_) {}
+
+      let progress = {};
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) progress = JSON.parse(saved);
+      } catch (_) {}
+
+      const hasAnyProgress = Object.values(progress).some(p => p.count > 0);
+      if (!hasAnyProgress) {
+        const initial = new Set(pokemonList.slice(0, INITIAL_UNLOCK_COUNT).map(p => p.dexNo));
+        localStorage.setItem(UNLOCK_KEY, JSON.stringify([...initial]));
+        return initial;
+      }
+
+      const all = new Set(pokemonList.map(p => p.dexNo));
+      localStorage.setItem(UNLOCK_KEY, JSON.stringify([...all]));
+      return all;
+    }
+
+    function saveUnlocked() {
+      localStorage.setItem(UNLOCK_KEY, JSON.stringify([...state.unlocked]));
+    }
+
+    function isUnlocked(dexNo) {
+      return state.unlocked.has(dexNo);
+    }
+
+    function getUnlockedPokemon() {
+      return pokemonList.filter(p => isUnlocked(p.dexNo));
+    }
+
+    function unlockNextPokemon() {
+      for (const p of pokemonList) {
+        if (!state.unlocked.has(p.dexNo)) {
+          state.unlocked.add(p.dexNo);
+          saveUnlocked();
+          return p;
+        }
+      }
+      return null;
+    }
+
     function loadProgress() {
       let progress = {};
       try {
@@ -671,6 +758,7 @@
 
     const state = {
       progress: loadProgress(),
+      unlocked: loadUnlocked(),
       mode: null,
       dexOrder: "sequential",
       selectedDexNo: null,
@@ -702,25 +790,45 @@
     function renderDexGrid() {
       const grid = document.getElementById("dex-grid");
       grid.innerHTML = "";
-      const masteredCount = pokemonList.filter(p => state.progress[p.dexNo]?.mastered).length;
+      const unlockedList = getUnlockedPokemon();
+      const masteredCount = unlockedList.filter(p => state.progress[p.dexNo]?.mastered).length;
 
       document.getElementById("dex-completion").style.display =
+        unlockedList.length === pokemonList.length &&
         masteredCount === pokemonList.length ? "block" : "none";
 
+      document.getElementById("dex-unlock-info").innerHTML =
+        `解放済み: <strong>${unlockedList.length}</strong> / ${pokemonList.length} 体` +
+        (unlockedList.length < pokemonList.length
+          ? "　マスターすると新しいポケモンが1体登場！"
+          : "");
+
       pokemonList.forEach(p => {
+        const unlocked = isUnlocked(p.dexNo);
         const prog = state.progress[p.dexNo] || { count: 0, mastered: false };
         const card = document.createElement("div");
         card.className = "dex-card" +
+          (!unlocked ? " locked" : "") +
           (prog.mastered ? " mastered" : "") +
           (state.selectedDexNo === p.dexNo ? " selected" : "");
-        card.innerHTML = `
-          ${prog.mastered ? '<span class="master-badge">⭐</span>' : ""}
-          <img src="${getSpriteUrl(p.dexNo)}" alt="${p.name}" loading="lazy">
-          <div class="name">${p.name}</div>
-          <div class="count">${prog.count}/${MASTERY_COUNT}</div>
-        `;
+
+        if (unlocked) {
+          card.innerHTML = `
+            ${prog.mastered ? '<span class="master-badge">⭐</span>' : ""}
+            <img src="${getSpriteUrl(p.dexNo)}" alt="${p.name}" loading="lazy">
+            <div class="name">${p.name}</div>
+            <div class="count">${prog.count}/${MASTERY_COUNT}</div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="lock-icon">🔒</div>
+            <div class="name">???</div>
+            <div class="count">？</div>
+          `;
+        }
+
         card.addEventListener("click", () => {
-          if (state.dexOrder === "free") {
+          if (state.dexOrder === "free" && unlocked) {
             state.selectedDexNo = p.dexNo;
             renderDexGrid();
           }
@@ -730,24 +838,33 @@
     }
 
     function getNextDexPokemon() {
-      if (state.dexOrder === "free" && state.selectedDexNo) {
-        return pokemonList.find(p => p.dexNo === state.selectedDexNo);
+      const unlocked = getUnlockedPokemon();
+      if (unlocked.length === 0) return pokemonList[0];
+
+      if (state.dexOrder === "free") {
+        if (state.selectedDexNo && isUnlocked(state.selectedDexNo)) {
+          return pokemonList.find(p => p.dexNo === state.selectedDexNo);
+        }
+        return unlocked[0];
       }
+
       const start = state.dexSequentialIndex;
       for (let i = 0; i < pokemonList.length; i++) {
         const idx = (start + i) % pokemonList.length;
         const p = pokemonList[idx];
+        if (!isUnlocked(p.dexNo)) continue;
         if (!state.progress[p.dexNo]?.mastered) {
           state.dexSequentialIndex = idx;
           return p;
         }
       }
-      return pokemonList[state.dexSequentialIndex % pokemonList.length];
+      return unlocked[0];
     }
 
     function startStage() {
-      const shuffled = [...pokemonList].sort(() => Math.random() - 0.5);
-      state.stageQueue = shuffled.slice(0, STAGE_SIZE);
+      const pool = getUnlockedPokemon();
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      state.stageQueue = shuffled.slice(0, Math.min(STAGE_SIZE, pool.length));
       state.stageIndex = 0;
       state.stageMistakes = 0;
       state.stageStartTime = Date.now();
@@ -760,8 +877,11 @@
     }
 
     function startDexPlay() {
-      if (state.dexOrder === "free" && !state.selectedDexNo) {
-        state.selectedDexNo = pokemonList[0].dexNo;
+      const unlocked = getUnlockedPokemon();
+      if (state.dexOrder === "free") {
+        if (!state.selectedDexNo || !isUnlocked(state.selectedDexNo)) {
+          state.selectedDexNo = unlocked[0]?.dexNo ?? pokemonList[0].dexNo;
+        }
       }
       state.mode = "dex";
       document.getElementById("play-mode-title").textContent = "📖 図鑑コンプリートモード";
@@ -856,7 +976,11 @@
         saveProgress();
 
         let subtitle = `${pokemon.name} をゲット！`;
-        if (!wasMastered && prog.mastered) subtitle = `${pokemon.name} マスターになった！⭐`;
+        if (!wasMastered && prog.mastered) {
+          const newlyUnlocked = unlockNextPokemon();
+          subtitle = `${pokemon.name} マスターになった！⭐`;
+          if (newlyUnlocked) subtitle += `　${newlyUnlocked.name} が登場！`;
+        }
         await showCatchAnimation(subtitle);
 
         state.dexSequentialIndex = (pokemonList.findIndex(p => p.dexNo === pokemon.dexNo) + 1) % pokemonList.length;
