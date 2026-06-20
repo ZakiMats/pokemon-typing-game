@@ -45,11 +45,12 @@
 - **ミス入力時**: 軽い視覚フィードバック（赤くフラッシュ等）。次の文字に進めず、正しいキーを押すまで待つ
 - **大文字小文字**: 区別しない（すべて小文字として判定）
 - **促音・長音など特殊表記の統一ルール**:
-  - 長音（ー）は **`-`（ハイフン）** で表す（例: イーブイ → I-BUI、キャタピー → KYATAPI-）
+  - 日本語の長音記号 **「ー」** には、同じ位置に **`-`（ハイフン）** を置く（例: イーブイ → I-BUI、ミュウツー → MYUUTSU-）
+  - 「ー」がない長い母音は **母音を重ねる**（例: ピカチュウ → PIKACHUU、ミュウ → MYUU）
   - 促音（っ）は次の子音を重ねる（例: ポッポ → POPPO）
   - 語末の「ん」は **`NN`** で表す（例: カビゴン → KABIGONN、ロコン → ROKONN）
   - 語中の「ん」（次の文字が子音・母音で続く場合）は **`N`** 1文字（例: マンキー → MANKI-、ゼニガメ → ZENIGAME）
-  - 長音＋語末のんが続く場合は **`-` + `NN`**（例: コクーン → KOK-NN）
+  - 「ー」＋語末の「ん」が続く場合は **`-` + `NN`**（例: コクーン → KOK-NN）
 
 ---
 
@@ -69,7 +70,7 @@
 | 8 | 19 | コラッタ | KORATTA | sprites/pokemon/19.png |
 | 9 | 21 | オニスズメ | ONISUZUME | sprites/pokemon/21.png |
 | 10 | 23 | アーボ | A-BO | sprites/pokemon/23.png |
-| 11 | 25 | ピカチュウ | PIKACHU- | sprites/pokemon/25.png |
+| 11 | 25 | ピカチュウ | PIKACHUU | sprites/pokemon/25.png |
 | 12 | 27 | サンド | SANDO | sprites/pokemon/27.png |
 | 13 | 35 | ピッピ | PIPPI | sprites/pokemon/35.png |
 | 14 | 37 | ロコン | ROKONN | sprites/pokemon/37.png |
@@ -79,14 +80,16 @@
 | 18 | 54 | コダック | KODAKKU | sprites/pokemon/54.png |
 | 19 | 56 | マンキー | MANKI- | sprites/pokemon/56.png |
 | 20 | 58 | ガーディ | GA-DI | sprites/pokemon/58.png |
-| 21 | 63 | ケーシィ | KE-SHI- | sprites/pokemon/63.png |
+| 21 | 63 | ケーシィ | KE-SHII | sprites/pokemon/63.png |
 | 22 | 66 | ワンリキー | WANRIKI- | sprites/pokemon/66.png |
 | 23 | 74 | イシツブテ | ISHITSUBUTE | sprites/pokemon/74.png |
 | 24 | 129 | コイキング | KOIKINGU | sprites/pokemon/129.png |
 | 25 | 131 | ラプラス | RAPURASU | sprites/pokemon/131.png |
 | 26 | 133 | イーブイ | I-BUI | sprites/pokemon/133.png |
 | 27 | 143 | カビゴン | KABIGONN | sprites/pokemon/143.png |
-| 28 | 147 | ミニリュウ | MINIRYU- | sprites/pokemon/147.png |
+| 28 | 147 | ミニリュウ | MINIRYUU | sprites/pokemon/147.png |
+| 29 | 150 | ミュウツー | MYUUTSU- | sprites/pokemon/150.png |
+| 30 | 151 | ミュウ | MYUU | sprites/pokemon/151.png |
 
 画像URLは以下のベースに番号を足して使用:
 `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/{図鑑No}.png`
@@ -119,7 +122,7 @@ const pokemonList = [
   { dexNo: 4, name: "ヒトカゲ", romaji: "HITOKAGE" },
   { dexNo: 133, name: "イーブイ", romaji: "I-BUI" },
   { dexNo: 143, name: "カビゴン", romaji: "KABIGONN" },
-  // ... 以下28体
+  // ... 以下30体
 ];
 
 // 図鑑コンプ進捗の保存イメージ（React state や localStorage相当）

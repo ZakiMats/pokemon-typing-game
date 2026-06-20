@@ -577,7 +577,7 @@
         <div class="progress-label" id="progress-label"></div>
         <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
-      <p class="hint-text">キーボードでローマ字を入力してね（長音は - 、語末のんは NN）</p>
+      <p class="hint-text">キーボードでローマ字を入力してね（「ー」の位置は - 、語末のんは NN）</p>
     </div>
     <input type="text" class="hidden-input" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
   </div>
@@ -625,7 +625,7 @@
       { dexNo: 19, name: "コラッタ", romaji: "KORATTA" },
       { dexNo: 21, name: "オニスズメ", romaji: "ONISUZUME" },
       { dexNo: 23, name: "アーボ", romaji: "A-BO" },
-      { dexNo: 25, name: "ピカチュウ", romaji: "PIKACHU-" },
+      { dexNo: 25, name: "ピカチュウ", romaji: "PIKACHUU" },
       { dexNo: 27, name: "サンド", romaji: "SANDO" },
       { dexNo: 35, name: "ピッピ", romaji: "PIPPI" },
       { dexNo: 37, name: "ロコン", romaji: "ROKONN" },
@@ -635,14 +635,16 @@
       { dexNo: 54, name: "コダック", romaji: "KODAKKU" },
       { dexNo: 56, name: "マンキー", romaji: "MANKI-" },
       { dexNo: 58, name: "ガーディ", romaji: "GA-DI" },
-      { dexNo: 63, name: "ケーシィ", romaji: "KE-SHI-" },
+      { dexNo: 63, name: "ケーシィ", romaji: "KE-SHII" },
       { dexNo: 66, name: "ワンリキー", romaji: "WANRIKI-" },
       { dexNo: 74, name: "イシツブテ", romaji: "ISHITSUBUTE" },
       { dexNo: 129, name: "コイキング", romaji: "KOIKINGU" },
       { dexNo: 131, name: "ラプラス", romaji: "RAPURASU" },
       { dexNo: 133, name: "イーブイ", romaji: "I-BUI" },
       { dexNo: 143, name: "カビゴン", romaji: "KABIGONN" },
-      { dexNo: 147, name: "ミニリュウ", romaji: "MINIRYU-" },
+      { dexNo: 147, name: "ミニリュウ", romaji: "MINIRYUU" },
+      { dexNo: 150, name: "ミュウツー", romaji: "MYUUTSU-" },
+      { dexNo: 151, name: "ミュウ", romaji: "MYUU" },
     ];
 
     function getSpriteUrl(dexNo) {
@@ -650,13 +652,15 @@
     }
 
     function loadProgress() {
+      let progress = {};
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
+        if (saved) progress = JSON.parse(saved);
       } catch (_) {}
-      const progress = {};
       pokemonList.forEach(p => {
-        progress[p.dexNo] = { count: 0, mastered: false };
+        if (!progress[p.dexNo]) {
+          progress[p.dexNo] = { count: 0, mastered: false };
+        }
       });
       return progress;
     }
